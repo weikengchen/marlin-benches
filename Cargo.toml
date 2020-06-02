@@ -1,0 +1,55 @@
+[package]
+name = "marlin-benches"
+version = "0.1.0"
+authors = [
+    "Sean Bowe",
+    "Alessandro Chiesa",
+    "Matthew Green",
+    "Ian Miers",
+    "Pratyush Mishra",
+    "Howard Wu"
+]
+description = "An implementation of the Groth-Maller 2017 zkSNARK proof system"
+homepage = "https://libzexe.org"
+repository = "https://github.com/scipr/zexe"
+documentation = "https://docs.rs/gm17/"
+keywords = ["zero knowledge", "cryptography", "zkSNARK", "SNARK", "Groth-Maller"]
+categories = ["cryptography"]
+include = ["Cargo.toml", "src", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
+license = "MIT/Apache-2.0"
+edition = "2018"
+
+################################# Dependencies ################################
+
+[dependencies]
+
+algebra-core = { path = "../zexe/algebra-core", default-features = false }
+ff-fft = { path = "../zexe/ff-fft", default-features = false }
+bench-utils = { git = "https://github.com/scipr-lab/zexe/" }
+r1cs-core = { path = "../zexe/r1cs-core", default-features = false }
+marlin = {path = "../marlin", default-features = false, features = ["std"] }
+poly-commit = { path = "../poly-commit", default-features = false }
+rand = { version = "0.7" }
+rand_core = { version = "0.5" }
+rayon = { version = "1", optional = true }
+digest = { version = "0.8" }
+derivative = { version = "2", features = ["use_core"] }
+smallvec = "1.2"
+criterion = "0.3.1"
+
+
+[dev-dependencies]
+blake2 = { version = "0.8", default-features = false }
+algebra = {  path = "../zexe/algebra", default-features = false, features = ["bls12_381"] }
+r1cs-std = {  path = "../zexe/r1cs-std",  default-features = false, features = [ "mnt6_753", "mnt4_753", "mnt6_298", "mnt4_298" , "std"] }
+
+[features]
+default = ["parallel", "std"]
+std = ["algebra-core/std", "ff-fft/std", "r1cs-core/std"]
+parallel = ["std", "algebra-core/parallel", "ff-fft/parallel", "rayon"]
+print-trace = [ "bench-utils/print-trace" ]
+
+[[bench]]
+name = "marlin-mnt"
+path = "benches/mnt.rs"
+harness = false
