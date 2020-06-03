@@ -40,11 +40,10 @@ criterion = "0.3.1"
 
 [dev-dependencies]
 blake2 = { version = "0.8", default-features = false }
-algebra = {  path = "../zexe/algebra", default-features = false, features = ["bls12_381"] }
-r1cs-std = {  path = "../zexe/r1cs-std",  default-features = false, features = [ "mnt6_753", "mnt4_753", "mnt6_298", "mnt4_298" , "std"] }
+algebra = {  path = "../zexe/algebra", default-features = false, features = ["bls12_381", "mnt4_753", "mnt6_753", "mnt6_298", "mnt4_298"] }
 
 [features]
-default = ["parallel", "std"]
+default = ["std"]
 std = ["algebra-core/std", "ff-fft/std", "r1cs-core/std"]
 parallel = ["std", "algebra-core/parallel", "ff-fft/parallel", "rayon"]
 print-trace = [ "bench-utils/print-trace" ]
