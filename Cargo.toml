@@ -23,12 +23,12 @@ edition = "2018"
 
 [dependencies]
 
-algebra-core = { path = "../zexe/algebra-core", default-features = false }
-ff-fft = { path = "../zexe/ff-fft", default-features = false }
-bench-utils = { git = "https://github.com/scipr-lab/zexe/" }
-r1cs-core = { path = "../zexe/r1cs-core", default-features = false }
-marlin = {path = "../marlin", default-features = false, features = ["std"] }
-poly-commit = { path = "../poly-commit", default-features = false }
+algebra-core = { git = "https://github.com/scipr-lab/zexe", default-features = false }
+ff-fft = { git = "https://github.com/scipr-lab/zexe", default-features = false }
+bench-utils = { git = "https://github.com/scipr-lab/zexe" }
+r1cs-core = { git = "https://github.com/scipr-lab/zexe", default-features = false }
+marlin = { git = "https://github.com/scipr-lab/marlin", default-features = false, features = ["std"] }
+poly-commit = { git = "https://github.com/scipr-lab/poly-commit", default-features = false }
 rand = { version = "0.7" }
 rand_core = { version = "0.5" }
 rayon = { version = "1", optional = true }
@@ -40,7 +40,7 @@ criterion = "0.3.1"
 
 [dev-dependencies]
 blake2 = { version = "0.8", default-features = false }
-algebra = {  path = "../zexe/algebra", default-features = false, features = ["bls12_381", "mnt4_753", "mnt6_753", "mnt6_298", "mnt4_298"] }
+algebra = { git = "https://github.com/scipr-lab/zexe", default-features = false, features = ["bls12_381", "mnt4_753", "mnt6_753", "mnt6_298", "mnt4_298"] }
 
 [features]
 default = ["std"]

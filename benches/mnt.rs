@@ -15,8 +15,9 @@ use algebra_core::UniformRand;
 use blake2::Blake2s;
 use criterion::Criterion;
 use marlin::Marlin;
-use poly_commit::marlin_kzg10::MarlinKZG10;
+use poly_commit::marlin_pc::MarlinKZG10;
 use r1cs_core::{ConstraintSynthesizer, ConstraintSystem, SynthesisError};
+use std::ops::Mul;
 
 type MultiPcMnt4 = MarlinKZG10<MNT4_298>;
 type MultiPcMnt6 = MarlinKZG10<MNT6_298>;
@@ -98,7 +99,7 @@ fn bench_prove(cr: &mut Criterion) {
             num_constraints: 65536,
         };
 
-        let srs = MarlinInstBls::universal_setup(65536, 10, 65536, rng).unwrap();
+        let srs = MarlinInstBls::universal_setup(65536, 10 + 1, 65536, rng).unwrap();
         let (pk, _) = MarlinInstBls::index(&srs, c.clone()).unwrap();
 
         cr.bench_function(&"bls", |b| {
@@ -114,7 +115,7 @@ fn bench_prove(cr: &mut Criterion) {
             num_constraints: 65536,
         };
 
-        let srs = MarlinInstMnt4::universal_setup(65536, 10, 65536, rng).unwrap();
+        let srs = MarlinInstMnt4::universal_setup(65536, 10 + 1, 65536, rng).unwrap();
         let (pk, _) = MarlinInstMnt4::index(&srs, c.clone()).unwrap();
 
         cr.bench_function(&"mnt4", |b| {
@@ -130,7 +131,7 @@ fn bench_prove(cr: &mut Criterion) {
             num_constraints: 65536,
         };
 
-        let srs = MarlinInstMnt6::universal_setup(65536, 10, 65536, rng).unwrap();
+        let srs = MarlinInstMnt6::universal_setup(65536, 10 + 1, 65536, rng).unwrap();
         let (pk, _) = MarlinInstMnt6::index(&srs, c.clone()).unwrap();
 
         cr.bench_function(&"mnt6", |b| {
@@ -146,7 +147,7 @@ fn bench_prove(cr: &mut Criterion) {
             num_constraints: 65536,
         };
 
-        let srs = MarlinInstMnt4Big::universal_setup(65536, 10, 65536, rng).unwrap();
+        let srs = MarlinInstMnt4Big::universal_setup(65536, 10 + 1, 65536, rng).unwrap();
         let (pk, _) = MarlinInstMnt4Big::index(&srs, c.clone()).unwrap();
 
         cr.bench_function(&"mnt4Big", |b| {
@@ -162,7 +163,7 @@ fn bench_prove(cr: &mut Criterion) {
             num_constraints: 65536,
         };
 
-        let srs = MarlinInstMnt6Big::universal_setup(65536, 10, 65536, rng).unwrap();
+        let srs = MarlinInstMnt6Big::universal_setup(65536, 10 + 1, 65536, rng).unwrap();
         let (pk, _) = MarlinInstMnt6Big::index(&srs, c.clone()).unwrap();
 
         cr.bench_function(&"mnt6Big", |b| {
@@ -181,12 +182,14 @@ fn bench_verify(cr: &mut Criterion) {
             num_constraints: 65536,
         };
 
-        let srs = MarlinInstBls::universal_setup(65536, 10, 65536, rng).unwrap();
+        let srs = MarlinInstBls::universal_setup(65536, 10 + 1, 65536, rng).unwrap();
         let (pk, vk) = MarlinInstBls::index(&srs, c.clone()).unwrap();
         let proof = MarlinInstBls::prove(&pk, c.clone(), rng).unwrap();
 
+        let c = c.a.unwrap().mul(c.b.unwrap());
+
         cr.bench_function(&"bls", |b| {
-            b.iter(|| MarlinInstBls::verify(&vk, &vec![BlsFr::rand(rng)], &proof, rng).unwrap())
+            b.iter(|| MarlinInstBls::verify(&vk, &vec![c], &proof, rng).unwrap())
         });
     }
     {
@@ -198,12 +201,14 @@ fn bench_verify(cr: &mut Criterion) {
             num_constraints: 65536,
         };
 
-        let srs = MarlinInstMnt4::universal_setup(65536, 10, 65536, rng).unwrap();
+        let srs = MarlinInstMnt4::universal_setup(65536, 10 + 1, 65536, rng).unwrap();
         let (pk, vk) = MarlinInstMnt4::index(&srs, c.clone()).unwrap();
         let proof = MarlinInstMnt4::prove(&pk, c.clone(), rng).unwrap();
 
+        let c = c.a.unwrap().mul(c.b.unwrap());
+
         cr.bench_function(&"mnt4", |b| {
-            b.iter(|| MarlinInstMnt4::verify(&vk, &vec![MNT4Fr::rand(rng)], &proof, rng).unwrap())
+            b.iter(|| MarlinInstMnt4::verify(&vk, &vec![c], &proof, rng).unwrap())
         });
     }
     {
@@ -215,12 +220,14 @@ fn bench_verify(cr: &mut Criterion) {
             num_constraints: 65536,
         };
 
-        let srs = MarlinInstMnt6::universal_setup(65536, 10, 65536, rng).unwrap();
+        let srs = MarlinInstMnt6::universal_setup(65536, 10 + 1, 65536, rng).unwrap();
         let (pk, vk) = MarlinInstMnt6::index(&srs, c.clone()).unwrap();
         let proof = MarlinInstMnt6::prove(&pk, c.clone(), rng).unwrap();
 
+        let c = c.a.unwrap().mul(c.b.unwrap());
+
         cr.bench_function(&"mnt6", |b| {
-            b.iter(|| MarlinInstMnt6::verify(&vk, &vec![MNT6Fr::rand(rng)], &proof, rng).unwrap())
+            b.iter(|| MarlinInstMnt6::verify(&vk, &vec![c], &proof, rng).unwrap())
         });
     }
     {
@@ -232,14 +239,14 @@ fn bench_verify(cr: &mut Criterion) {
             num_constraints: 65536,
         };
 
-        let srs = MarlinInstMnt4Big::universal_setup(65536, 10, 65536, rng).unwrap();
+        let srs = MarlinInstMnt4Big::universal_setup(65536, 10 + 1, 65536, rng).unwrap();
         let (pk, vk) = MarlinInstMnt4Big::index(&srs, c.clone()).unwrap();
         let proof = MarlinInstMnt4Big::prove(&pk, c.clone(), rng).unwrap();
 
+        let c = c.a.unwrap().mul(c.b.unwrap());
+
         cr.bench_function(&"mnt4Big", |b| {
-            b.iter(|| {
-                MarlinInstMnt4Big::verify(&vk, &vec![MNT4BigFr::rand(rng)], &proof, rng).unwrap()
-            })
+            b.iter(|| MarlinInstMnt4Big::verify(&vk, &vec![c], &proof, rng).unwrap())
         });
     }
     {
@@ -251,14 +258,14 @@ fn bench_verify(cr: &mut Criterion) {
             num_constraints: 65536,
         };
 
-        let srs = MarlinInstMnt6Big::universal_setup(65536, 10, 65536, rng).unwrap();
+        let srs = MarlinInstMnt6Big::universal_setup(65536, 10 + 1, 65536, rng).unwrap();
         let (pk, vk) = MarlinInstMnt6Big::index(&srs, c.clone()).unwrap();
         let proof = MarlinInstMnt6Big::prove(&pk, c.clone(), rng).unwrap();
 
+        let c = c.a.unwrap().mul(c.b.unwrap());
+
         cr.bench_function(&"mnt6Big", |b| {
-            b.iter(|| {
-                MarlinInstMnt6Big::verify(&vk, &vec![MNT6BigFr::rand(rng)], &proof, rng).unwrap()
-            })
+            b.iter(|| MarlinInstMnt6Big::verify(&vk, &vec![c], &proof, rng).unwrap())
         });
     }
 }
@@ -271,7 +278,7 @@ criterion_group! {
 
 criterion_group! {
     name = marlin_verify;
-    config = Criterion::default().sample_size(30);
+    config = Criterion::default().sample_size(10);
     targets = bench_verify
 }
 
