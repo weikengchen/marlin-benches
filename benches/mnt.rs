@@ -16,7 +16,7 @@ use blake2::Blake2s;
 use criterion::Criterion;
 use marlin::Marlin;
 use poly_commit::marlin_pc::MarlinKZG10;
-use r1cs_core::{ConstraintSynthesizer, ConstraintSystem, SynthesisError};
+use r1cs_core::{lc, ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use std::ops::Mul;
 
 type MultiPcMnt4 = MarlinKZG10<MNT4_298>;
@@ -43,47 +43,32 @@ impl<F: PrimeField> Clone for DummyCircuit<F> {
         DummyCircuit {
             a: self.a.clone(),
             b: self.b.clone(),
-            num_variables: self.num_variables,
-            num_constraints: self.num_constraints,
+            num_variables: self.num_variables.clone(),
+            num_constraints: self.num_constraints.clone(),
         }
     }
 }
 
 impl<F: PrimeField> ConstraintSynthesizer<F> for DummyCircuit<F> {
-    fn generate_constraints<CS: ConstraintSystem<F>>(
-        self,
-        cs: &mut CS,
-    ) -> Result<(), SynthesisError> {
-        let a = cs.alloc(|| "a", || self.a.ok_or(SynthesisError::AssignmentMissing))?;
-        let b = cs.alloc(|| "b", || self.b.ok_or(SynthesisError::AssignmentMissing))?;
-        let c = cs.alloc_input(
-            || "c",
-            || {
-                let mut a = self.a.ok_or(SynthesisError::AssignmentMissing)?;
-                let b = self.b.ok_or(SynthesisError::AssignmentMissing)?;
+    fn generate_constraints(self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
+        let a = cs.new_witness_variable(|| self.a.ok_or(SynthesisError::AssignmentMissing))?;
+        let b = cs.new_witness_variable(|| self.b.ok_or(SynthesisError::AssignmentMissing))?;
+        let c = cs.new_input_variable(|| {
+            let a = self.a.ok_or(SynthesisError::AssignmentMissing)?;
+            let b = self.b.ok_or(SynthesisError::AssignmentMissing)?;
 
-                a.mul_assign(&b);
-                Ok(a)
-            },
-        )?;
+            Ok(a * b)
+        })?;
 
-        for i in 0..(self.num_variables - 3) {
-            let _ = cs.alloc(
-                || format!("var {}", i),
-                || self.a.ok_or(SynthesisError::AssignmentMissing),
-            )?;
+        for _ in 0..(self.num_variables - 3) {
+            let _ = cs.new_witness_variable(|| self.a.ok_or(SynthesisError::AssignmentMissing))?;
         }
 
-        for i in 0..self.num_constraints - 1 {
-            cs.enforce(
-                || format!("constraint {}", i),
-                |lc| lc + a,
-                |lc| lc + b,
-                |lc| lc + c,
-            );
+        for _ in 0..self.num_constraints - 1 {
+            cs.enforce_constraint(lc!() + a, lc!() + b, lc!() + c)?;
         }
 
-        cs.enforce(|| "constraint {}", |lc| lc, |lc| lc, |lc| lc);
+        cs.enforce_constraint(lc!(), lc!(), lc!())?;
 
         Ok(())
     }
